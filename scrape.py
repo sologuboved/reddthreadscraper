@@ -1,11 +1,9 @@
 import time
 import json
 import praw
-import pprint
 from pytz import utc, timezone
 from datetime import datetime
-from scrt import *
-
+from userinfo import agent, client_id, secret
 
 TRUE_EVENTS = '1uac3m'
 FNAME_TXT = 'true_events{}{}.txt'
@@ -26,9 +24,11 @@ def dump_submission(fname_json, submission_id, byold=''):
 def scrape(submission_id, byold):
     thread = list()
 
-    reddit = praw.Reddit(client_id=client_id,
-                         client_secret=secret,
-                         user_agent=agent)
+    reddit = praw.Reddit(
+        client_id=client_id,
+        client_secret=secret,
+        user_agent=agent,
+    )
     submission = reddit.submission(id=submission_id)
 
     if byold:
@@ -55,7 +55,6 @@ def scrape(submission_id, byold):
 
 
 def json_to_text(fname_json, fname_txt, lim, byold=''):
-
     def write_in():
         nonlocal ind
 

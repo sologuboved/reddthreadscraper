@@ -1,2 +1,5 @@
 .idea/
-scrt.py
+.DS_Store
+__pycache__/
+userinfo.py
+venv_reddthreadscraper/
