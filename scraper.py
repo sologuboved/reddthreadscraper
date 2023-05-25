@@ -1,92 +1,62 @@
-import datetime
-
 import praw
-from pytz import timezone, utc
 
+from helpers import delete_pid, dump_utf_json, which_watch, write_pid
 from userinfo import R_CLIENT_ID, R_CLIENT_SECRET, R_PASSWORD, R_USER_AGENT, R_USERNAME
 
 
-def dump_submission(fname_json, submission_id, by_old=False):
-    with open(fname_json.format(by_old), 'w', encoding='utf-8') as handler:
-        json.dump(scrape_tread(submission_id, by_old), handler)
+class Batcher:
+    def __init__(self, raw_thread, batch_size):
+        self.raw_thread = raw_thread
 
 
-def scrape_tread(submission_id, by_old):
-    thread = list()
+class Scraper:
+    def __init__(self, url, by_old, batch_size):
+        self.url = url
+        self.by_old = by_old
+        self.batch_size = batch_size
+        self.filename = self.get_filename()
 
-    reddit = praw.Reddit(
-        client_id=R_CLIENT_ID,
-        client_secret=R_CLIENT_SECRET,
-        password=R_PASSWORD,
-        user_agent=R_USER_AGENT,
-        username=R_USERNAME,
-    )
-    submission = reddit.submission(id=submission_id)
+    def get_filename(self):
+        if self.url.endswith('/'):
+            url = self.url[:-1]
+        else:
+            url = self.url
+        return url.rsplit('/', 1)[-1]
 
-    if by_old:
-        submission.comment_sort = 'old'
+    def get_thread(self):
+        reddit = praw.Reddit(
+            client_id=R_CLIENT_ID,
+            client_secret=R_CLIENT_SECRET,
+            password=R_PASSWORD,
+            user_agent=R_USER_AGENT,
+            username=R_USERNAME,
+        )
+        submission = reddit.submission(url=self.url)
 
-    print("Replacing more...")
-    submission.comments.replace_more(limit=None)
-    print("...Replaced more")
+        if self.by_old:
+            submission.comment_sort = 'old'
 
-    for comment in submission.comments.list():
-        try:
-            authorname = comment.author.name
-        except AttributeError:
-            authorname = 'NoName'
-        thread.append({
-            'utctimestamp': comment.created_utc,
-            'authorname': authorname,
-            'ups': comment.ups,
-            'text': comment.body,
-        })
+        print("Replacing more...")
+        submission.comments.replace_more(limit=None)
+        print("...Replaced more")
 
-    return thread
-
-
-def json_to_text(fname_json, fname_txt, lim, byold=''):
-    def write_in():
-        nonlocal ind
-
-        comment = next(thread)
-
-        text = comment[TEXT]
-        if text == '[deleted]':
-            return
-
-        handler.write(str(ind) + '\n')
-        raw_date = datetime.datetime.utcfromtimestamp(comment[DATE])
-        local_date = utc.localize(raw_date, is_dst=None).astimezone(timezone('Europe/Moscow'))
-        handler.write(local_date.strftime("%d.%m.%Y %H:%M:%S") + '\n')
-        handler.write(comment[AUTHOR] + '\n')
-        handler.write("ups: " + str(comment[UPS]) + '\n\n')
-        handler.write(text + '\n\n\n')
-
-        ind += 1
-
-    with open(fname_json.format(byold), encoding='utf-8') as data:
-        thread = json.load(data)
-    print("Thread is {} comment(s) long".format(len(thread)))
-    thread = iter(thread)
-    ind = 1
-    iteration = 0
-    while True:
-        iteration += 1
-        try:
-            with open(fname_txt.format(byold, iteration), 'w', encoding='utf-8') as handler:
-                while ind % lim:
-                    write_in()
-                write_in()
-        except StopIteration:
-            break
+        for comment in submission.comments.list():
+            text = comment.body
+            if text == '[deleted]':
+                continue
+            try:
+                authorname = comment.author.name
+            except AttributeError:
+                authorname = 'NoName'
+            yield {
+                'utctimestamp': comment.created_utc,
+                'author': authorname,
+                'ups': comment.ups,
+                'text': text,
+            }
 
 
 if __name__ == '__main__':
-    start_time = time.time()
-    dump_submission(FNAME_JSON, TRUE_EVENTS, BYOLD)
-    elapsed_time = time.time() - start_time
-    print()
-    print()
-    print(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
-    json_to_text(FNAME_JSON, FNAME_TXT, 500, BYOLD)
+    pid_fname = write_pid()
+    ('https://www.reddit.com/r/AskReddit/comments/ucaltb/what_are_some_simple_yet_incredibly/', False, False)
+    delete_pid(pid_fname)
