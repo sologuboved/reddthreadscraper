@@ -1,57 +1,46 @@
 import datetime
-import json
-import time
 
 import praw
 from pytz import timezone, utc
 
 from userinfo import R_CLIENT_ID, R_CLIENT_SECRET, R_PASSWORD, R_USER_AGENT, R_USERNAME
 
-TRUE_EVENTS = '1uac3m'
-FNAME_TXT = 'true_events{}{}.txt'
-FNAME_JSON = 'true_events{}.json'
-BYOLD = '_byold'
-DATE = 'utctimestamp'
-AUTHOR = 'authorname'
-NONAME = 'noname'
-UPS = 'ups'
-TEXT = 'text'
+
+def dump_submission(fname_json, submission_id, by_old=False):
+    with open(fname_json.format(by_old), 'w', encoding='utf-8') as handler:
+        json.dump(scrape_tread(submission_id, by_old), handler)
 
 
-def dump_submission(fname_json, submission_id, byold=''):
-    with open(fname_json.format(byold), 'w', encoding='utf-8') as handler:
-        json.dump(scrape(submission_id, byold), handler)
-
-
-def scrape(submission_id, byold):
+def scrape_tread(submission_id, by_old):
     thread = list()
 
     reddit = praw.Reddit(
         client_id=R_CLIENT_ID,
         client_secret=R_CLIENT_SECRET,
+        password=R_PASSWORD,
         user_agent=R_USER_AGENT,
+        username=R_USERNAME,
     )
     submission = reddit.submission(id=submission_id)
 
-    if byold:
+    if by_old:
         submission.comment_sort = 'old'
 
     print("Replacing more...")
     submission.comments.replace_more(limit=None)
     print("...Replaced more")
 
-    # first_comment = submission.comments.list()[0]
-    # pprint.pprint(vars(first_comment))
-
     for comment in submission.comments.list():
         try:
             authorname = comment.author.name
         except AttributeError:
-            authorname = NONAME
-        thread.append({DATE: comment.created_utc,
-                       AUTHOR: authorname,
-                       UPS: comment.ups,
-                       TEXT: comment.body})
+            authorname = 'NoName'
+        thread.append({
+            'utctimestamp': comment.created_utc,
+            'authorname': authorname,
+            'ups': comment.ups,
+            'text': comment.body,
+        })
 
     return thread
 
