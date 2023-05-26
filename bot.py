@@ -24,8 +24,11 @@ async def start(update, context):
 async def info(update, context):
     await context.bot.send_message(
         update.message.chat_id,
-        """Provide a Reddit thread URL, batch size (optional), and 'old' for sorting comments by date (optional).
-E.g.: https://www.reddit.com/r/nosleep/comments/3iex1h/im_a_search_and_rescue_officer_for_the_us_forest/ 500 old
+        """Provide a Reddit thread URL, 
+batch size (optional), 
+'old' for sorting comments by date (optional),
+and 'keep' for keeping files @ server.
+E.g.: https://www.reddit.com/r/nosleep/comments/3iex1h/im_a_search_and_rescue_officer_for_the_us_forest/ 500 old keep
 """,
         disable_web_page_preview=True,
     )
@@ -49,7 +52,11 @@ async def scrape(update, context):
         by_old = True
     else:
         by_old = False
-    num_files = outputter.output(url, by_old, batch_size)
+    if 'keep' in in_message:
+        remove = False
+    else:
+        remove = True
+    num_files = outputter.output(url=url, by_old=by_old, batch_size=batch_size, remove=remove)
     out_message = f"(Took {time.gmtime(time.perf_counter() - beg):%H:%M:%S}): " \
                   f"{url} -> {inflect.engine().plural('file', num_files)} -> {E_MAIL}"
     await context.bot.send_message(
