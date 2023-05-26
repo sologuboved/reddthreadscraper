@@ -1,6 +1,7 @@
 import datetime
 
 import praw
+from pytz import timezone, utc
 
 from helpers import delete_pid, dump_utf_json, get_abs_path, which_watch, write_pid
 from userinfo import R_CLIENT_ID, R_CLIENT_SECRET, R_PASSWORD, R_USER_AGENT, R_USERNAME
@@ -76,7 +77,20 @@ class Scraper:
     @staticmethod
     def write_txt(thread, filename):
         filename += '.txt'
+        with open(filename, 'w', encoding='utf-8') as handler:
+            for comment in thread:
+                handler.write(f"""
+{utc.localize(
+                    datetime.datetime.utcfromtimestamp(comment['utctimestamp']), 
+                    is_dst=None,
+                ).astimezone(timezone('Europe/Moscow')).strftime("%d.%m.%Y %H:%M:%S")}
+{comment['author']}
+{comment['ups']} ups
 
+{comment['text']}
+____
+
+""")
         return filename
 
     @staticmethod
@@ -108,6 +122,6 @@ if __name__ == '__main__':
         'https://www.reddit.com/r/AskReddit/comments/ucaltb/what_are_some_simple_yet_incredibly/',
         False,
         1000,
-        False,
+        True,
     ).main())
     delete_pid(pid_fname)
