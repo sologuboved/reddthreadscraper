@@ -22,4 +22,5 @@ if __name__ == '__main__':
         url='https://www.reddit.com/r/Paranormal/comments/6l40lg/some_lesser_known_askreddit_paranormal_etc_threads/',
         by_old=True,
         batch_size=None,
+        remove=False,
     ))
