@@ -1,3 +1,5 @@
+import datetime
+
 import praw
 
 from helpers import delete_pid, dump_utf_json, get_abs_path, which_watch, write_pid
@@ -13,7 +15,7 @@ class Scraper:
             self.writer = self.write_txt
         else:
             self.writer = self.write_json
-        self.filename = self.get_filename()
+        self.filename = get_abs_path(self.get_filename())
 
     def get_filename(self):
         if self.url.endswith('/'):
@@ -84,6 +86,7 @@ class Scraper:
 
     @which_watch
     def main(self):
+        print(f"({datetime.datetime.now():%Y-%m-%d %H:%M:%S}) Scraping {self.url}, destination {self.filename}...\n")
         submission = self.get_submission()
         num_comments = submission.num_comments
         raw_thread = self.get_comments(submission)
@@ -95,10 +98,15 @@ class Scraper:
                     filename = self.writer(batch, f'{self.filename}_{str(index).zfill(zfill)}')
                     filenames.append(filename)
                 return filenames
-        return self.writer(list(raw_thread), get_abs_path(self.filename))
+        return self.writer(list(raw_thread), self.filename)
 
 
 if __name__ == '__main__':
     pid_fname = write_pid()
-    # ('https://www.reddit.com/r/AskReddit/comments/ucaltb/what_are_some_simple_yet_incredibly/', False, False)
+    Scraper(
+        'https://www.reddit.com/r/AskReddit/comments/ucaltb/what_are_some_simple_yet_incredibly/',
+        False,
+        1000,
+        False,
+    ).main()
     delete_pid(pid_fname)
