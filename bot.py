@@ -27,6 +27,7 @@ async def info(update, context):
         """Provide a Reddit thread URL, batch size (optional), and 'old' for sorting comments by date (optional).
 E.g.: https://www.reddit.com/r/nosleep/comments/3iex1h/im_a_search_and_rescue_officer_for_the_us_forest/ 500 old
 """,
+        disable_web_page_preview=True,
     )
 
 
