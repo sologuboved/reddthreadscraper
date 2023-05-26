@@ -1,13 +1,18 @@
+import time
+
+import inflect
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 from helpers import write_pid
-from userinfo import T_TOKEN
+import outputter
+from userinfo import E_MAIL, T_TOKEN
 
 
 async def scrape(update, context):
-    message = update.message.text.split()
-    url = message.pop(0)
-    for item in message:
+    start = time.perf_counter()
+    in_message = update.message.text.split()
+    url = in_message.pop(0)
+    for item in in_message:
         try:
             batch_size = int(item)
         except ValueError:
@@ -16,13 +21,16 @@ async def scrape(update, context):
             break
     else:
         batch_size = None
-    if 'old' in message:
+    if 'old' in in_message:
         by_old = True
     else:
         by_old = False
+    num_files = outputter.output(url, by_old, batch_size)
+    out_message = f"(Took {time.gmtime(time.perf_counter() - start):%H:%M:%S}): " \
+                  f"{url} -> {inflect.engine().plural('file', num_files)} -> {E_MAIL}"
     await context.bot.send_message(
         update.message.chat_id,
-        f"url: {url}, batch_size: {batch_size}, by_old: {by_old}",
+        out_message,
         disable_web_page_preview=True,
     )
 

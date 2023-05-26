@@ -110,7 +110,7 @@ def main(url, by_old, batch_size, txt):
                 filenames.append(filename)
             print(f"{len(filenames)} ready")
             return filenames
-    return writer(list(raw_thread), raw_filename)
+    return [writer(list(raw_thread), raw_filename)]
 
 
 if __name__ == '__main__':
