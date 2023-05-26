@@ -11,7 +11,7 @@ from userinfo import E_MAIL, T_TOKEN
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
+    level=logging.WARNING,
 )
 
 
@@ -34,6 +34,7 @@ E.g.: https://www.reddit.com/r/nosleep/comments/3iex1h/im_a_search_and_rescue_of
     )
 
 
+@report_exception
 @check_auth
 async def scrape(update, context):
     beg = time.perf_counter()
@@ -56,9 +57,9 @@ async def scrape(update, context):
         remove = False
     else:
         remove = True
-    num_files = outputter.output(url=url, by_old=by_old, batch_size=batch_size, remove=remove)
-    out_message = f"(Took {time.gmtime(time.perf_counter() - beg):%H:%M:%S}): " \
-                  f"{url} -> {inflect.engine().plural('file', num_files)} -> {E_MAIL}"
+    num_files = await outputter.output(url=url, by_old=by_old, batch_size=batch_size, remove=remove)
+    out_message = f"(Took {time.strftime('%H:%M:%S', time.gmtime(time.perf_counter() - beg))}): " \
+                  f"{url} -> {num_files} {inflect.engine().plural('file', num_files)} -> {E_MAIL}"
     await context.bot.send_message(
         update.message.chat_id,
         out_message,
@@ -66,7 +67,6 @@ async def scrape(update, context):
     )
 
 
-@report_exception
 def main():
     application = Application.builder().token(T_TOKEN).build()
     application.add_handler(CommandHandler('start', start))

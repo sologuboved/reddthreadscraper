@@ -56,16 +56,16 @@ def check_auth(func):
 
 def report_exception(func):
     @wraps(func)
-    def wrapper(*args, **kwargs):
+    async def wrapper(*args, **kwargs):
         try:
-            return func(*args, **kwargs)
+            return await func(*args, **kwargs)
         except Exception as e:
             notification = f"({func.__name__}, called with {args}, {kwargs}) {type(e).__name__}: {e}"
-            asyncio.run(Bot(token=T_TOKEN).send_message(
+            await Bot(token=T_TOKEN).send_message(
                 chat_id=T_REDDTHREADSCRAPER_ID,
                 text=notification,
                 disable_web_page_preview=True,
-            ))
+            )
             traceback_msg = traceback.format_exc()
             logging.error(traceback_msg)
 
