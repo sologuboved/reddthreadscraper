@@ -16,28 +16,22 @@ def get_filename(url):
     return url.rsplit('/', 1)[-1]
 
 
-async def get_submission(url, by_old):
-    reddit = asyncpraw.Reddit(
-        client_id=R_CLIENT_ID,
-        client_secret=R_CLIENT_SECRET,
-        password=R_PASSWORD,
-        user_agent=R_USER_AGENT,
-        username=R_USERNAME,
-    )
-    submission = await reddit.submission(url=url)
+async def get_submission(reddit, url, by_old):
+    submission = await reddit.submission(url=url, fetch=False)
 
     if by_old:
         submission.comment_sort = 'old'
+    await submission.load()
 
     print("Replacing more...")
-    submission.comments.replace_more(limit=None)
+    await submission.comments.replace_more(limit=None)
     print("...Replaced more")
 
     return submission
 
 
-def get_comments(submission):
-    for comment in submission.comments.list():
+def get_comments(raw_comments):
+    for comment in raw_comments:
         text = comment.body
         if text == '[deleted]':
             continue
@@ -95,13 +89,21 @@ def write_json(thread, filename):
 
 
 @which_watch
-def scrape(url, by_old, batch_size, txt):
+async def scrape(url, by_old, batch_size, txt):
     raw_filename = get_abs_path(get_filename(url))
     print(f"({datetime.datetime.now():%Y-%m-%d %H:%M:%S}) Scraping {url}, destination {raw_filename}...\n")
     writer = [write_json, write_txt][txt]
-    submission = asyncio.run(get_submission(url, by_old))
-    num_comments = submission.num_comments
-    raw_thread = get_comments(submission)
+    async with asyncpraw.Reddit(
+        client_id=R_CLIENT_ID,
+        client_secret=R_CLIENT_SECRET,
+        password=R_PASSWORD,
+        user_agent=R_USER_AGENT,
+        username=R_USERNAME,
+    ) as reddit:
+        submission = await get_submission(reddit, url, by_old)
+        num_comments = submission.num_comments
+        raw_comments = submission.comments.list()
+        raw_thread = get_comments(raw_comments)
     if batch_size:
         filenames = list()
         if num_comments > batch_size + 9:
@@ -122,10 +124,10 @@ if __name__ == '__main__':
     #     1000,
     #     True,
     # ))
-    print(scrape(
+    print(asyncio.run(scrape(
         url='https://www.reddit.com/r/Paranormal/comments/6l40lg/some_lesser_known_askreddit_paranormal_etc_threads/',
         by_old=True,
         batch_size=None,
-        txt=False,
-    ))
+        txt=True,
+    )))
     delete_pid(pid_fname)
