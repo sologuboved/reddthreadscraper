@@ -1,6 +1,7 @@
+import asyncio
 import datetime
 
-import praw
+import asyncpraw
 from pytz import timezone, utc
 
 from helpers import delete_pid, dump_utf_json, get_abs_path, which_watch, write_pid
@@ -15,15 +16,15 @@ def get_filename(url):
     return url.rsplit('/', 1)[-1]
 
 
-def get_submission(url, by_old):
-    reddit = praw.Reddit(
+async def get_submission(url, by_old):
+    reddit = asyncpraw.Reddit(
         client_id=R_CLIENT_ID,
         client_secret=R_CLIENT_SECRET,
         password=R_PASSWORD,
         user_agent=R_USER_AGENT,
         username=R_USERNAME,
     )
-    submission = reddit.submission(url=url)
+    submission = await reddit.submission(url=url)
 
     if by_old:
         submission.comment_sort = 'old'
@@ -98,7 +99,7 @@ def scrape(url, by_old, batch_size, txt):
     raw_filename = get_abs_path(get_filename(url))
     print(f"({datetime.datetime.now():%Y-%m-%d %H:%M:%S}) Scraping {url}, destination {raw_filename}...\n")
     writer = [write_json, write_txt][txt]
-    submission = get_submission(url, by_old)
+    submission = asyncio.run(get_submission(url, by_old))
     num_comments = submission.num_comments
     raw_thread = get_comments(submission)
     if batch_size:
@@ -115,10 +116,16 @@ def scrape(url, by_old, batch_size, txt):
 
 if __name__ == '__main__':
     pid_fname = write_pid()
+    # print(scrape(
+    #     'https://www.reddit.com/r/AskReddit/comments/ucaltb/what_are_some_simple_yet_incredibly/',
+    #     False,
+    #     1000,
+    #     True,
+    # ))
     print(scrape(
-        'https://www.reddit.com/r/AskReddit/comments/ucaltb/what_are_some_simple_yet_incredibly/',
-        False,
-        1000,
-        True,
+        url='https://www.reddit.com/r/Paranormal/comments/6l40lg/some_lesser_known_askreddit_paranormal_etc_threads/',
+        by_old=True,
+        batch_size=None,
+        txt=False,
     ))
     delete_pid(pid_fname)
