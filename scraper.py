@@ -76,6 +76,7 @@ class Scraper:
     @staticmethod
     def write_txt(thread, filename):
         filename += '.txt'
+
         return filename
 
     @staticmethod
@@ -103,10 +104,10 @@ class Scraper:
 
 if __name__ == '__main__':
     pid_fname = write_pid()
-    Scraper(
+    print(Scraper(
         'https://www.reddit.com/r/AskReddit/comments/ucaltb/what_are_some_simple_yet_incredibly/',
         False,
         1000,
         False,
-    ).main()
+    ).main())
     delete_pid(pid_fname)
