@@ -20,7 +20,6 @@ async def scrape(update, context):
         by_old = True
     else:
         by_old = False
-    print(update.message.chat_id)
     await context.bot.send_message(
         update.message.chat_id,
         f"url: {url}, batch_size: {batch_size}, by_old: {by_old}",
