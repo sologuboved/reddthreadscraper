@@ -72,8 +72,7 @@ def write_txt(thread, filename):
     with open(filename, 'w', encoding='utf-8') as handler:
         for comment in thread:
             count += 1
-            handler.write(f"""
-{utc.localize(
+            handler.write(f"""{utc.localize(
                 datetime.datetime.utcfromtimestamp(comment['utctimestamp']), 
                 is_dst=None,
             ).astimezone(timezone('Europe/Moscow')).strftime("%d.%m.%Y %H:%M:%S")}
