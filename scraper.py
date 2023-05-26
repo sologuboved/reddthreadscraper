@@ -94,7 +94,7 @@ def write_json(thread, filename):
 
 
 @which_watch
-def main(url, by_old, batch_size, txt):
+def scrape(url, by_old, batch_size, txt):
     raw_filename = get_abs_path(get_filename(url))
     print(f"({datetime.datetime.now():%Y-%m-%d %H:%M:%S}) Scraping {url}, destination {raw_filename}...\n")
     writer = [write_json, write_txt][txt]
@@ -115,7 +115,7 @@ def main(url, by_old, batch_size, txt):
 
 if __name__ == '__main__':
     pid_fname = write_pid()
-    print(main(
+    print(scrape(
         'https://www.reddit.com/r/AskReddit/comments/ucaltb/what_are_some_simple_yet_incredibly/',
         False,
         1000,

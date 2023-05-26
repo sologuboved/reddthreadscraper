@@ -1,9 +1,15 @@
 from functools import wraps
 import json
+import logging
 import os
 import re
 import sys
 import time
+import traceback
+
+from telegram import Bot
+
+from userinfo import T_REDDTHREADSCRAPER_ID, T_TOKEN
 
 
 def dump_utf_json(entries, json_file):
@@ -31,6 +37,38 @@ def which_watch(func):
             return result
         finally:
             report_time()
+
+    return wrapper
+
+
+def check_auth(func):
+    @wraps(func)
+    async def wrapper(update, context, *args, **kwargs):
+        chat_id = update.message.chat_id
+        if chat_id != T_REDDTHREADSCRAPER_ID:
+            await context.bot.send_message(chat_id=chat_id, text="Not authorized!")
+            return
+        return await func(update, context, *args, **kwargs)
+
+    return wrapper
+
+
+def report_exception(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            notification = f"({func.__name__}, called with {args}, {kwargs}) {type(e).__name__}: {e}"
+            notifier = Bot(token=T_TOKEN)
+            async with notifier:
+                await notifier.send_message(
+                    chat_id=T_REDDTHREADSCRAPER_ID,
+                    text=notification,
+                    disable_web_page_preview=True,
+                )
+            traceback_msg = traceback.format_exc()
+            logging.error(traceback_msg)
 
     return wrapper
 
