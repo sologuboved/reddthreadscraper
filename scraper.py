@@ -32,24 +32,28 @@ async def get_submission(reddit, url, by_old):
 
 def get_body_and_comments(permalink, post_text, post_author, post_utctimestamp, post_ups, raw_comments):
     yield {
+        '#': 0,
         'permalink': permalink,
         'utctimestamp': post_utctimestamp,
         'author': post_author,
         'ups': post_ups,
         'text': post_text,
     }
+    index = 0
     for comment in raw_comments:
         text = comment.body
         if text == '[deleted]':
             continue
+        index += 1
         try:
-            authorname = comment.author.name
+            comment_author = comment.author.name
         except AttributeError:
-            authorname = 'NoName'
+            comment_author = '[NoName]'
         yield {
+            '#': index,
             'permalink': comment.permalink,
             'utctimestamp': comment.created_utc,
-            'author': authorname,
+            'author': comment_author,
             'ups': comment.ups,
             'text': text,
         }
@@ -79,6 +83,7 @@ def write_txt(thread, filename):
                 datetime.datetime.utcfromtimestamp(comment['utctimestamp']), 
                 is_dst=None,
             ).astimezone(timezone('Europe/Moscow')).strftime("%d.%m.%Y %H:%M:%S")}
+#{comment['#']}
 {comment['author']}
 {comment['ups']} ups
 {comment['permalink']}
@@ -111,11 +116,15 @@ async def scrape(url, by_old, batch_size, txt):
     ) as reddit:
         submission = await get_submission(reddit, url, by_old)
         num_comments = submission.num_comments
+        try:
+            post_author = submission.author.name
+        except AttributeError:
+            post_author = '[NoName]'
         raw_comments = submission.comments.list()
         raw_thread = get_body_and_comments(
             submission.permalink,
             f"{submission.title}\n\n{submission.selftext}",
-            submission.author.name,
+            post_author,
             submission.created_utc,
             submission.score,
             raw_comments,
