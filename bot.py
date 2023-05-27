@@ -6,7 +6,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 from helpers import check_auth, report_exception, write_pid
 import outputter
-from userinfo import E_MAIL, T_TOKEN
+from userinfo import E_MAIL_FROM, E_MAIL_TO, T_TOKEN
 
 
 logging.basicConfig(
@@ -59,7 +59,7 @@ async def scrape(update, context):
         remove = True
     num_files = await outputter.output(url=url, by_old=by_old, batch_size=batch_size, remove=remove)
     out_message = f"(Took {time.strftime('%H:%M:%S', time.gmtime(time.perf_counter() - beg))}:) " \
-                  f"{url} -> {num_files} {inflect.engine().plural('file', num_files)} -> {E_MAIL}"
+                  f"{url} -> {num_files} {inflect.engine().plural('file', num_files)} -> {E_MAIL_TO} from {E_MAIL_FROM}"
     await context.bot.send_message(
         update.message.chat_id,
         out_message,
