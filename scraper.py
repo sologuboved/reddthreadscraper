@@ -30,8 +30,9 @@ async def get_submission(reddit, url, by_old):
     return submission
 
 
-def get_body_and_comments(post_text, post_author, post_utctimestamp, post_ups, raw_comments):
+def get_body_and_comments(permalink, post_text, post_author, post_utctimestamp, post_ups, raw_comments):
     yield {
+        'permalink': permalink,
         'utctimestamp': post_utctimestamp,
         'author': post_author,
         'ups': post_ups,
@@ -46,6 +47,7 @@ def get_body_and_comments(post_text, post_author, post_utctimestamp, post_ups, r
         except AttributeError:
             authorname = 'NoName'
         yield {
+            'permalink': comment.permalink,
             'utctimestamp': comment.created_utc,
             'author': authorname,
             'ups': comment.ups,
@@ -79,6 +81,7 @@ def write_txt(thread, filename):
             ).astimezone(timezone('Europe/Moscow')).strftime("%d.%m.%Y %H:%M:%S")}
 {comment['author']}
 {comment['ups']} ups
+{comment['permalink']}
 
 {comment['text']}
 ____
@@ -110,7 +113,8 @@ async def scrape(url, by_old, batch_size, txt):
         num_comments = submission.num_comments
         raw_comments = submission.comments.list()
         raw_thread = get_body_and_comments(
-            f"{submission.title}\n{submission.permalink}\n\n{submission.selftext}",
+            submission.permalink,
+            f"{submission.title}\n\n{submission.selftext}",
             submission.author.name,
             submission.created_utc,
             submission.score,

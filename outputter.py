@@ -11,7 +11,7 @@ from userinfo import E_MAIL_FROM, E_MAIL_TO, E_PASSWORD, E_SERVER
 async def output(url, by_old, batch_size, remove):
     filenames = await scraper.scrape(url=url, by_old=by_old, batch_size=batch_size, txt=True)
     send_email(filenames)
-    num_filenames = len(filenames)
+    num_files = len(filenames)
     if remove:
         print("Removing files...")
         for filename in filenames:
@@ -20,14 +20,16 @@ async def output(url, by_old, batch_size, remove):
             except FileNotFoundError:
                 pass
         print('..done')
-    return num_filenames
+    else:
+        print(f"Keeping {inflect.engine().plural('file', num_files)}")
+    return num_files
 
 
 def send_email(filenames):
     num_files = len(filenames)
     print(f"Sending {num_files} {inflect.engine().plural('file', num_files)}: {E_MAIL_FROM} -> {E_MAIL_TO}...")
     message = EmailMessage()
-    message['Subject'] = f"{filenames[0].split('.', 1)[0]}: {num_files}"
+    message['Subject'] = f"[Reddthreadscraper] {filenames[0].split('.', 1)[0]}: {num_files}"
     message['From'] = E_MAIL_FROM
     message['To'] = E_MAIL_TO
     for filename in filenames:
