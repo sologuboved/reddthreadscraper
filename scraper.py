@@ -30,7 +30,13 @@ async def get_submission(reddit, url, by_old):
     return submission
 
 
-def get_comments(raw_comments):
+def get_body_and_comments(post_text, post_author, post_utctimestamp, post_ups, raw_comments):
+    yield {
+        'utctimestamp': post_utctimestamp,
+        'author': post_author,
+        'ups': post_ups,
+        'text': post_text,
+    }
     for comment in raw_comments:
         text = comment.body
         if text == '[deleted]':
@@ -102,8 +108,18 @@ async def scrape(url, by_old, batch_size, txt):
     ) as reddit:
         submission = await get_submission(reddit, url, by_old)
         num_comments = submission.num_comments
+        post_text = submission.selftext
+        post_author = submission.author.name
+        post_utctimestamp = submission.created_utc
+        post_ups = submission.score
         raw_comments = submission.comments.list()
-        raw_thread = get_comments(raw_comments)
+        raw_thread = get_body_and_comments(
+            post_text,
+            post_author,
+            post_utctimestamp,
+            post_ups,
+            raw_comments,
+        )
     if batch_size:
         filenames = list()
         if num_comments > batch_size + 9:
