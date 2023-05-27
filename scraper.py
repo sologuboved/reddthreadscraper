@@ -110,7 +110,7 @@ async def scrape(url, by_old, batch_size, txt):
         num_comments = submission.num_comments
         raw_comments = submission.comments.list()
         raw_thread = get_body_and_comments(
-            submission.selftext,
+            f"{submission.title}\n{submission.permalink}\n\n{submission.selftext}",
             submission.author.name,
             submission.created_utc,
             submission.score,
