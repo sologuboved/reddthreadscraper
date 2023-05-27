@@ -1,5 +1,8 @@
+from email.message import EmailMessage
 import os
 import smtplib
+
+import inflect
 
 import scraper
 from userinfo import E_MAIL_FROM, E_MAIL_TO, E_PASSWORD, E_SERVER
@@ -20,16 +23,28 @@ async def output(url, by_old, batch_size, remove):
 
 
 def send_email(filenames):
-    print(f"Sending {len(filenames)} files from {E_MAIL_FROM} to {E_MAIL_TO}...")
+    num_files = len(filenames)
+    print(f"Sending {num_files} {inflect.engine().plural('file', num_files)}: {E_MAIL_FROM} -> {E_MAIL_TO}...")
+    message = EmailMessage()
+    message['Subject'] = f"{filenames[0].split('.', 1)[0]}: {num_files}"
+    message['From'] = E_MAIL_FROM
+    message['To'] = E_MAIL_TO
+    for filename in filenames:
+        message.add_attachment(open(filename, 'r').read(), filename=filename)
+    with smtplib.SMTP(E_SERVER, 587) as server:
+        server.ehlo()
+        server.starttls()
+        server.login(E_MAIL_FROM, E_PASSWORD)
+        server.sendmail(message['From'], message['To'], message.as_string())
+    print('..done')
 
 
 if __name__ == '__main__':
     import asyncio
 
-    # print(asyncio.run(output(
-    #     url='https://www.reddit.com/r/Paranormal/comments/6l40lg/some_lesser_known_askreddit_paranormal_etc_threads/',
-    #     by_old=True,
-    #     batch_size=None,
-    #     remove=False,
-    # )))
-    send_email(['true_events.txt'])
+    print(asyncio.run(output(
+        url='https://www.reddit.com/r/Paranormal/comments/6l40lg/some_lesser_known_askreddit_paranormal_etc_threads/',
+        by_old=True,
+        batch_size=None,
+        remove=False,
+    )))

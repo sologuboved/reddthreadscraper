@@ -4,7 +4,7 @@ import datetime
 import asyncpraw
 from pytz import timezone, utc
 
-from helpers import delete_pid, dump_utf_json, get_abs_path, which_watch, write_pid
+from helpers import delete_pid, dump_utf_json, which_watch, write_pid
 from userinfo import R_CLIENT_ID, R_CLIENT_SECRET, R_PASSWORD, R_USER_AGENT, R_USERNAME
 
 
@@ -90,7 +90,7 @@ def write_json(thread, filename):
 
 @which_watch
 async def scrape(url, by_old, batch_size, txt):
-    raw_filename = get_abs_path(get_filename(url))
+    raw_filename = get_filename(url)
     print(f"({datetime.datetime.now():%Y-%m-%d %H:%M:%S}) Scraping {url}, destination {raw_filename}...\n")
     writer = [write_json, write_txt][txt]
     async with asyncpraw.Reddit(
