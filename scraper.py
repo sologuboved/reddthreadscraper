@@ -108,16 +108,12 @@ async def scrape(url, by_old, batch_size, txt):
     ) as reddit:
         submission = await get_submission(reddit, url, by_old)
         num_comments = submission.num_comments
-        post_text = submission.selftext
-        post_author = submission.author.name
-        post_utctimestamp = submission.created_utc
-        post_ups = submission.score
         raw_comments = submission.comments.list()
         raw_thread = get_body_and_comments(
-            post_text,
-            post_author,
-            post_utctimestamp,
-            post_ups,
+            submission.selftext,
+            submission.author.name,
+            submission.created_utc,
+            submission.score,
             raw_comments,
         )
     if batch_size:
