@@ -58,7 +58,7 @@ async def scrape(update, context):
     else:
         remove = True
     num_files = await outputter.output(url=url, by_old=by_old, batch_size=batch_size, remove=remove)
-    out_message = f"(Took {time.strftime('%H:%M:%S', time.gmtime(time.perf_counter() - beg))}): " \
+    out_message = f"(Took {time.strftime('%H:%M:%S', time.gmtime(time.perf_counter() - beg))}:) " \
                   f"{url} -> {num_files} {inflect.engine().plural('file', num_files)} -> {E_MAIL}"
     await context.bot.send_message(
         update.message.chat_id,

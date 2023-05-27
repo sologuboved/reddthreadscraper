@@ -21,7 +21,7 @@ def dump_utf_json(entries, json_file):
 
 def which_watch(func):
     @wraps(func)
-    def wrapper(*args, **kwargs):
+    async def wrapper(*args, **kwargs):
 
         def report_time():
             print("'{}' took {}".format(
@@ -31,7 +31,7 @@ def which_watch(func):
 
         start = time.perf_counter()
         try:
-            result = func(*args, **kwargs)
+            result = await func(*args, **kwargs)
         except BaseException as e:
             raise e
         else:
