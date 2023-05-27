@@ -18,9 +18,8 @@ async def output(url, by_old, batch_size, remove):
             try:
                 os.remove(filename)
             except FileNotFoundError:
-                print("...suprisingly, nothing to remove")
-            else:
-                print('..done')
+                pass
+        print('..done')
     return num_filenames
 
 
